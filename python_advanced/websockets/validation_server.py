@@ -1,31 +1,36 @@
 #!/usr/bin/env python3
 """
-WebSocket server with basic message validation.
+WebSocket validation server.
 
+The server validates incoming messages and responds with:
+- ERR:EMPTY for empty messages
+- OK:{message} for valid messages
 """
 
 import asyncio
 import websockets
+from websockets.exceptions import ConnectionClosed
 
 
-async def validate_message(websocket):
+async def connection_handler(websocket):
     """
-    Handle a WebSocket connection and validate each received message.
-
+    Handle a WebSocket connection and validate incoming messages.
     """
-    async for message in websocket:
-        if message.strip() == "":
-            await websocket.send("ERR:EMPTY")
-        else:
-            await websocket.send(f"OK:{message}")
+    try:
+        async for message in websocket:
+            if message.strip() == "":
+                await websocket.send("ERR:EMPTY")
+            else:
+                await websocket.send(f"OK:{message}")
+    except ConnectionClosed:
+        pass
 
 
 async def main():
     """
     Start the WebSocket validation server.
-    
     """
-    async with websockets.serve(validate_message, "localhost", 8765):
+    async with websockets.serve(connection_handler, "localhost", 8765):
         await asyncio.Future()
 
 
